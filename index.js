@@ -224,7 +224,8 @@
         let lastError = null;
         const abortSignal = options && options.signal ? options.signal : undefined;
 
-        for (let attempt = 0; attempt <= settings.maxRetries; attempt++) {
+        const thisMaxRetries = settings.maxRetries === 0 ? Infinity : settings.maxRetries;
+        for (let attempt = 0; attempt <= thisMaxRetries; attempt++) {
             try {
                 // 若已被中断，直接停止重试
                 if (abortSignal?.aborted) {
@@ -274,7 +275,7 @@
                 }
 
                 if (treatAsEmpty) {
-                    if (attempt < settings.maxRetries) {
+                    if (attempt < settings.maxRetries || settings.maxRetries === 0) {
                         const delayMs = calculateDelay(attempt);
                         log(`检测到空内容，${delayMs}ms后重试`, true);
                         showRetryToast(attempt + 2, settings.maxRetries + 1, delayMs);
@@ -306,7 +307,7 @@
                 if (isAbortError(error) || abortSignal?.aborted) {
                     throw error;
                 }
-                if (attempt < settings.maxRetries) {
+                if (attempt < settings.maxRetries || settings.maxRetries === 0) {
                     const delayMs = calculateDelay(attempt);
                     log(`${delayMs}ms后重试`);
                     showRetryToast(attempt + 2, settings.maxRetries + 1, delayMs);
@@ -400,7 +401,7 @@
 
                             <div class="range-block">
                                 <div class="range-block-title">最大重试次数: <span id="retry-count-value">${settings.maxRetries}</span></div>
-                                <input id="retry-count" type="range" min="1" max="40" step="1" value="${settings.maxRetries}">
+                                <input id="retry-count" type="range" min="0" max="40" step="1" value="${settings.maxRetries}">
                             </div>
 
                             <div class="range-block">
